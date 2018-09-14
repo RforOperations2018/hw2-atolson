@@ -68,12 +68,33 @@ ui <- fluidPage(
 
 # Define server logic
 server <- function(input, output) {
+  # Filtered Employment data
+  emInput <- reactive({
+    employFilter <- employ %>%
+      # Population Filter
+      filter(Population.2010 >= input$popSelect[1] & Population.2010 <= input$popSelect[2])
+    # Neighborhood Filter
+    if (length(input$HoodSelect) > 0 ) {
+      employ <- subset(employ, Neighborhood %in% input$HoodSelect)
+    }
+    
+    return(employ)
+  })
   output$plot1 <- renderPlotly({
-    dat <- subset(employ, Neighborhood %in% input$HoodSelect)
-    ggplot(data = dat, aes(x = Neighborhood, y = as.numeric(Total_Adult_Residents_Employed.2010), fill = Neighborhood)) + geom_bar(stat = "identity")
+    dat <- emInput
+    ggplotly(
+      ggplot(data = dat, aes(x = Neighborhood, y = Total_Adult_Residents_Employed.2010, fill = Neighborhood, text = paste0("<b>", Neighborhood, ":</b> ",
+                                                                                  "<br>Sector: ", Sector,
+                                                                                  "<br>Population: ", Population.2010,
+                                                                                  "<br>Employed Adults: ", Total_Adult_Residents_Employed.2010))) + 
+        geom_bar(stat = "identity")+
+        ylab("Adults Employed") +
+        guides(color = FALSE)
+      , tooltip = "text")
   })
   output$table <- DT::renderDataTable({
-    subset(employ, Neighborhood %in% input$HoodSelect, select = c(Employment, Population.2010, Sector, Total_Adult_Residents_Employed.2010))
+    employFilter <- emInput()
+    subset(employFilter, select = c(Neighborhood, Sector, Population.2010, Total_Adult_Residents_Employed.2010))
   })
 }
 
