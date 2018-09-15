@@ -75,20 +75,44 @@ server <- function(input, output) {
       filter(Population.2010 >= input$popSelect[1] & Population.2010 <= input$popSelect[2])
     # Neighborhood Filter
     if (length(input$HoodSelect) > 0 ) {
-      employ <- subset(employ, Neighborhood %in% input$HoodSelect)
+      employFilter <- subset(employFilter, Neighborhood %in% input$HoodSelect)
     }
     
     return(employ)
   })
   output$plot1 <- renderPlotly({
-    dat <- emInput
+    dat <- emInput()
     ggplotly(
-      ggplot(data = dat, aes(x = Neighborhood, y = Total_Adult_Residents_Employed.2010, fill = Neighborhood, text = paste0("<b>", Neighborhood, ":</b> ",
+      ggplot(data = dat, aes(x = Total_Adult_Residents_Employed.2010, y = Population.2010, color = Sector, text = paste0("<b>", Neighborhood, ":</b> ",
                                                                                   "<br>Sector: ", Sector,
                                                                                   "<br>Population: ", Population.2010,
                                                                                   "<br>Employed Adults: ", Total_Adult_Residents_Employed.2010))) + 
+        geom_point()+
+        xlab("Adults Employed") +
+        ylab("Population") +
+        guides(color = FALSE)
+      , tooltip = "text")
+  })
+  output$plot2 <- renderPlotly({
+    dat <- emInput()
+    ggplotly(
+      ggplot(data = dat, aes(x = Neighborhood, y = round(Total_Adult_Residents_Employed.2010/Population.2010,2), fill = Neighborhood, text = paste0("<b>", Neighborhood, ":</b> ",
+                                                                                                                         "<br>Sector: ", Sector,
+                                                                                                                         "<br>Population: ", Population.2010,
+                                                                                                                         "<br>Employed Adults: ", Total_Adult_Residents_Employed.2010))) + 
         geom_bar(stat = "identity")+
-        ylab("Adults Employed") +
+        xlab("Neighborhood") +
+        ylab("% Employed") +
+        guides(color = FALSE)
+      , tooltip = "text")
+  })
+  output$plot3 <- renderPlotly({
+    dat <- emInput()
+    ggplotly(
+      ggplot(data = dat, aes(x = Sector, y = round(Total_Adult_Residents_Employed.2010/Population.2010,2))) + 
+        geom_boxplot()+
+        xlab("Sector") +
+        ylab("% Employed") +
         guides(color = FALSE)
       , tooltip = "text")
   })
