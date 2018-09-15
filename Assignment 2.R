@@ -45,7 +45,7 @@ ui <- fluidPage(
       checkboxGroupInput("sectorSelect",
                          "Sector:",
                          choices = sort(unique(employ.load$Sector))),
-      
+      # Your sector Select should have either an updateSelectInput or renderUI tied to neighborhoods so users can only seelect the sectors that show up in the neighborhoods they selected
       #Reset Filters button
       actionButton("reset", "Reset Filters", icon = icon("refresh"))
       
