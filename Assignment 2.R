@@ -42,10 +42,8 @@ ui <- fluidPage(
                   step = 1),
       
       #Reset Filters button
-      actionButton("reset", "Reset Filters", icon = icon("refresh")),
+      actionButton("reset", "Reset Filters", icon = icon("refresh"))
       
-      #Download data button
-      downloadButton("downloadData","Download Employment Data")
     ),
     mainPanel(
       tabsetPanel(
@@ -59,7 +57,10 @@ ui <- fluidPage(
                  plotlyOutput("plot3")
         ),
         tabPanel("Table",
-                 DT::dataTableOutput("table")
+                 DT::dataTableOutput("table"),
+                 
+                 #Download data button
+                 downloadButton("downloadData","Download Employment Data")
         )
       )
     )
@@ -77,7 +78,6 @@ server <- function(input, output, session = session) {
     if (length(input$HoodSelect) > 0 ) {
       employ <- subset(employ, Neighborhood %in% input$HoodSelect)
     }
-    
     return(employ)
   })
   output$plot1 <- renderPlotly({
@@ -107,15 +107,15 @@ server <- function(input, output, session = session) {
   output$plot3 <- renderPlotly({
     dat <- emInput()
     ggplotly(
-      ggplot(data = dat, aes(x = Sector, y = round(Total_Adult_Residents_Employed.2010/Population.2010,2))) + 
+      ggplot(data = dat, aes(x = Sector, y = round(Total_Adult_Residents_Employed.2010/Total_Jobs_Located_in_Neighborhood.2000,2))) + 
         geom_boxplot()+
-        labs(x = "Sector", y = "% Employed", title = "% Employed by Sector") +
+        labs(x = "Neighborhood", y = "% Residents Employed", title = "% Jobs Taken by Residents in Neighborhood") +
         guides(color = FALSE)
       , tooltip = "text")
   })
   output$table <- DT::renderDataTable({
     employ <- emInput()
-    subset(employ, select = c(Neighborhood, Sector, Population.2010, Total_Adult_Residents_Employed.2010))
+    subset(employ, select = c(Neighborhood, Sector, Population.2010, Total_Adult_Residents_Employed.2010, Total_Jobs_Located_in_Neighborhood.2000))
   })
   
   # Updating the URL Bar
