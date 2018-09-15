@@ -31,7 +31,7 @@ ui <- fluidPage(
                   choices = sort(employ.load$Neighborhood),
                   multiple = TRUE,
                   selectize = TRUE,
-                  selected = c("North Oakland", "Squirrel Hill North", "Squirrel Hill South")),
+                  selected = c("North Oakland", "Squirrel Hill North", "Squirrel Hill South", "Allentown", "Arlington")),
       
       #Population Selection
       sliderInput("popSelect",
@@ -40,6 +40,11 @@ ui <- fluidPage(
                   max = max(employ.load$Population.2010, na.rm = T),
                   value = c(min(employ.load$Population.2010, na.rm = T), max(employ.load$Population.2010, na.rm = T)),
                   step = 1),
+      
+      #Sector Selection
+      checkboxGroupInput("sectorSelect",
+                         "Sector:",
+                         choices = sort(unique(employ.load$Sector))),
       
       #Reset Filters button
       actionButton("reset", "Reset Filters", icon = icon("refresh"))
@@ -78,6 +83,10 @@ server <- function(input, output, session = session) {
     if (length(input$HoodSelect) > 0 ) {
       employ <- subset(employ, Neighborhood %in% input$HoodSelect)
     }
+    # Sector Filter
+    if (length(input$sectorSelect) > 0 ) {
+      employ <- subset(employ, Sector %in% input$sectorSelect)
+    }
     return(employ)
   })
   output$plot1 <- renderPlotly({
@@ -109,7 +118,7 @@ server <- function(input, output, session = session) {
     ggplotly(
       ggplot(data = dat, aes(x = Sector, y = round(Total_Adult_Residents_Employed.2010/Total_Jobs_Located_in_Neighborhood.2000,2))) + 
         geom_boxplot()+
-        labs(x = "Neighborhood", y = "% Residents Employed", title = "% Jobs Taken by Residents in Neighborhood") +
+        labs(x = "Sector", y = "% Residents Employed", title = "% Jobs Taken by Residents in Neighborhood by Sector") +
         guides(color = FALSE)
       , tooltip = "text")
   })
@@ -139,8 +148,9 @@ server <- function(input, output, session = session) {
   
   # Reset Filter Data
   observeEvent(input$reset, {
-    updateSelectInput(session, "HoodSelect", selected = c("North Oakland", "Squirrel Hill North", "Squirrel Hill South"))
+    updateSelectInput(session, "HoodSelect", selected = c("North Oakland", "Squirrel Hill North", "Squirrel Hill South", "Allentown", "Arlington"))
     updateSliderInput(session, "popSelect", value = c(min(employ.load$Population.2010, na.rm = T), max(employ.load$Population.2010, na.rm = T)))
+    updateCheckboxGroupInput(session, "sectorSelect", choices = sort(unique(employ.load$Sector)), selected = NULL)
     showNotification("You have successfully reset the filters", type = "message")
   })
 }
