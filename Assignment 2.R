@@ -49,13 +49,13 @@ ui <- fluidPage(
     ),
     mainPanel(
       tabsetPanel(
-        tabPanel("Plot1", 
+        tabPanel("Scatterplot", 
                  plotlyOutput("plot1")
         ),
-        tabPanel("Plot2", 
+        tabPanel("Bar Chart", 
                  plotlyOutput("plot2")
         ),
-        tabPanel("Plot3", 
+        tabPanel("Boxplot", 
                  plotlyOutput("plot3")
         ),
         tabPanel("Table",
@@ -88,8 +88,7 @@ server <- function(input, output, session = session) {
                                                                                   "<br>Population: ", Population.2010,
                                                                                   "<br>Employed Adults: ", Total_Adult_Residents_Employed.2010))) + 
         geom_point()+
-        xlab("Adults Employed") +
-        ylab("Population") +
+        labs(x = "Adults Employed", y = "Population", title = "Employed Adults by Population") +
         guides(color = FALSE)
       , tooltip = "text")
   })
@@ -101,8 +100,7 @@ server <- function(input, output, session = session) {
                                                                                                                          "<br>Population: ", Population.2010,
                                                                                                                          "<br>Employed Adults: ", Total_Adult_Residents_Employed.2010))) + 
         geom_bar(stat = "identity")+
-        xlab("Neighborhood") +
-        ylab("% Employed") +
+        labs(x = "Neighborhood", y = "% Employed", title = "% Employed by Neighborhood") +
         guides(color = FALSE)
       , tooltip = "text")
   })
@@ -111,8 +109,7 @@ server <- function(input, output, session = session) {
     ggplotly(
       ggplot(data = dat, aes(x = Sector, y = round(Total_Adult_Residents_Employed.2010/Population.2010,2))) + 
         geom_boxplot()+
-        xlab("Sector") +
-        ylab("% Employed") +
+        labs(x = "Sector", y = "% Employed", title = "% Employed by Sector") +
         guides(color = FALSE)
       , tooltip = "text")
   })
