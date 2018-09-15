@@ -11,7 +11,7 @@ library(stringr)
 library(shinyjs)
 
 #reading in the data
-employ <- read.csv(file="employment.csv", header = TRUE, sep = ",")
+employ.load <- read.csv(file="employment.csv", header = TRUE, sep = ",")
 
 pdf(NULL)
 
@@ -28,7 +28,7 @@ ui <- fluidPage(
       #Neighborhood select
       selectInput("HoodSelect",
                   "Neighborhood:",
-                  choices = sort(employ$Neighborhood),
+                  choices = sort(employ.load$Neighborhood),
                   multiple = TRUE,
                   selectize = TRUE,
                   selected = c("North Oakland", "Squirrel Hill North", "Squirrel Hill South")),
@@ -36,9 +36,9 @@ ui <- fluidPage(
       #Population Selection
       sliderInput("popSelect",
                   "Population:",
-                  min = min(employ$Population.2010, na.rm = T),
-                  max = max(employ$Population.2010, na.rm = T),
-                  value = c(min(employ$Population.2010, na.rm = T), max(employ$Population.2010, na.rm = T)),
+                  min = min(employ.load$Population.2010, na.rm = T),
+                  max = max(employ.load$Population.2010, na.rm = T),
+                  value = c(min(employ.load$Population.2010, na.rm = T), max(employ.load$Population.2010, na.rm = T)),
                   step = 1),
       
       #Reset Filters button
@@ -67,15 +67,15 @@ ui <- fluidPage(
 )
 
 # Define server logic
-server <- function(input, output) {
+server <- function(input, output, session = session) {
   # Filtered Employment data
   emInput <- reactive({
-    employFilter <- employ %>%
+    employ <- employ.load %>%
       # Population Filter
       filter(Population.2010 >= input$popSelect[1] & Population.2010 <= input$popSelect[2])
     # Neighborhood Filter
     if (length(input$HoodSelect) > 0 ) {
-      employFilter <- subset(employFilter, Neighborhood %in% input$HoodSelect)
+      employ <- subset(employ, Neighborhood %in% input$HoodSelect)
     }
     
     return(employ)
@@ -117,8 +117,34 @@ server <- function(input, output) {
       , tooltip = "text")
   })
   output$table <- DT::renderDataTable({
-    employFilter <- emInput()
-    subset(employFilter, select = c(Neighborhood, Sector, Population.2010, Total_Adult_Residents_Employed.2010))
+    employ <- emInput()
+    subset(employ, select = c(Neighborhood, Sector, Population.2010, Total_Adult_Residents_Employed.2010))
+  })
+  
+  # Updating the URL Bar
+  observe({
+    print(reactiveValuesToList(input))
+    session$doBookmark()
+  })
+  onBookmarked(function(url) {
+    updateQueryString(url)
+  })
+  
+  # Download data in the datatable
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste("pit-employment-", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      write.csv(emInput(), file)
+    }
+  )
+  
+  # Reset Filter Data
+  observeEvent(input$reset, {
+    updateSelectInput(session, "HoodSelect", selected = c("North Oakland", "Squirrel Hill North", "Squirrel Hill South"))
+    updateSliderInput(session, "popSelect", value = c(min(employ.load$Population.2010, na.rm = T), max(employ.load$Population.2010, na.rm = T)))
+    showNotification("You have successfully reset the filters", type = "message")
   })
 }
 
